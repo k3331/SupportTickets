@@ -130,19 +130,6 @@ Validation errors (missing/invalid fields) return `400` and a single `error` mes
 
 4. **Health and readiness** — `/health` for liveness; `/ready` checks `mongoose.connection.readyState` for readiness (e.g. Kubernetes probes).
 
-5. **Frontend** — Vanilla CSS with theme variables; Jira-style board (Kanban), drag-and-drop, modals, search, mobile-friendly. API base URL configurable via `VITE_API_BASE_URL` for Docker/production.
+5. **Frontend** — tailwind css; Jira-style board (Kanban), drag-and-drop, modals, search, mobile-friendly. API base URL configurable via `VITE_API_BASE_URL` for Docker/production.
 
-## Scope for Improvements
 
-- **Authentication / authorization** — Protect routes, role-based access (e.g. merchant vs support).
-- **Filtering and pagination** — Query params for status, priority, date range; cursor or page-based list.
-- **TypeScript** — Backend and frontend are now TypeScript with shared types in `backend/shared/`.
-- **More tests** — Frontend unit/integration (e.g. React Testing Library), E2E (Playwright/Cypress).
-- **Logging and observability** — Structured logs, request IDs, optional APM.
-- **Rate limiting and security** — Helmet, rate-limit middleware, input sanitization.
-
-## Deliverables
-
-- **Repo:** Ready to commit or zip. No secrets; use `.env` and `.env.example` as needed.
-- **Run:** Docker Compose or local Node + MongoDB as above.
-- **Tests:** `npm test` in `backend/` runs API tests (Jest + supertest).
