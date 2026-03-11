@@ -1,0 +1,10 @@
+# Avoid copying host node_modules into frontend build
+frontend/node_modules
+backend/node_modules
+.git
+.gitignore
+*.log
+.env
+.env.*
+backend/dist
+frontend/dist

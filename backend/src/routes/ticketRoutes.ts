@@ -1,19 +1,20 @@
 /**
- * Ticket API routes.
+ * Ticket API routes. Validation via Joi (createTicketSchema, patchTicketSchema).
  */
 
 import { Router } from 'express';
 import * as ticketController from '../controllers/ticketController.js';
+import { validateBody, validateParams } from '../middleware/validateJoi.js';
 import {
-  createTicketValidation,
-  patchTicketValidation,
-  handleValidationErrors,
-} from '../middleware/validation.js';
+  createTicketSchema,
+  patchTicketSchema,
+  ticketIdParamSchema,
+} from '../schemas/ticketSchemas.js';
 
 const router = Router();
 
-router.post('/', createTicketValidation, handleValidationErrors, ticketController.createTicket);
+router.post('/', validateBody(createTicketSchema), ticketController.createTicket);
 router.get('/', ticketController.getTickets);
-router.patch('/:id', patchTicketValidation, handleValidationErrors, ticketController.patchTicket);
+router.patch('/:id', validateParams(ticketIdParamSchema), validateBody(patchTicketSchema), ticketController.patchTicket);
 
 export default router;

@@ -12,8 +12,13 @@ const STATUS_OPTIONS: { value: Status; label: string }[] = [
 ];
 
 function formatDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(iso).toLocaleString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 function truncate(str: string | undefined, max = 100) {
@@ -82,9 +87,20 @@ export function TicketCard({ ticket, onUpdate, onToast }: TicketCardProps) {
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
         </div>
-        <div className="flex flex-wrap gap-1.5 mb-2 sm:pl-[22px]">
+        <div className="flex flex-wrap items-center gap-1.5 mb-2 sm:pl-[22px]">
           <StatusBadge status={ticket.status} />
           <PriorityBadge priority={ticket.priority} />
+          <select
+            value={ticket.status}
+            onChange={(e) => handleStatusChange(e.target.value as Status)}
+            disabled={busy}
+            className="ml-auto text-[0.6875rem] font-medium py-1 px-2 rounded border border-border bg-surface text-text cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-accent/30"
+            aria-label="Update status"
+          >
+            {STATUS_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
         </div>
         <p className="m-0 mb-1.5 sm:pl-[22px] text-sm sm:text-[0.8125rem] font-semibold text-text leading-tight break-words" title={ticket.subject}>
           {truncate(ticket.subject, 60)}

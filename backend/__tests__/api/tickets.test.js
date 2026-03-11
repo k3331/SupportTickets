@@ -64,7 +64,7 @@ describe('POST /api/tickets', () => {
   it('returns 400 when priority is invalid', async () => {
     const res = await request(app)
       .post('/api/tickets')
-      .send({ subject: 'S', message: 'M', priority: 'Invalid' });
+      .send({ subject: 'Valid subject', message: 'Valid message here', priority: 'Invalid' });
     expect(res.status).toBe(400);
     expect(res.body).toHaveProperty('error');
   });
@@ -84,7 +84,8 @@ describe('PATCH /api/tickets/:id', () => {
   beforeAll(async () => {
     const res = await request(app)
       .post('/api/tickets')
-      .send({ subject: 'Patch test', message: 'Patch msg', priority: 'High' });
+      .send({ subject: 'Patch test', message: 'Patch message for update test', priority: 'High' });
+    expect(res.status).toBe(201);
     ticketId = res.body.id;
   });
 

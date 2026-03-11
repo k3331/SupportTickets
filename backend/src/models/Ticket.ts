@@ -57,6 +57,39 @@ export async function getAllTickets(): Promise<ITicket[]> {
   })) as ITicket[];
 }
 
+export interface ListTicketsFilter {
+  search?: string;
+  status?: string;
+  priority?: string;
+  page: number;
+  limit: number;
+}
+
+export async function listTicketsFiltered(filter: ListTicketsFilter): Promise<{ tickets: ITicket[]; total: number }> {
+  const query: Record<string, unknown> = {};
+  if (filter.status) query.status = filter.status;
+  if (filter.priority) query.priority = filter.priority;
+  if (filter.search && filter.search.trim()) {
+    const term = filter.search.trim();
+    query.$or = [
+      { subject: new RegExp(term, 'i') },
+      { message: new RegExp(term, 'i') },
+    ];
+  }
+  const skip = (filter.page - 1) * filter.limit;
+  const [docs, total] = await Promise.all([
+    Ticket.find(query).sort({ createdAt: -1 }).skip(skip).limit(filter.limit).lean(),
+    Ticket.countDocuments(query),
+  ]);
+  const tickets = (docs as unknown as TicketDoc[]).map(({ _id, __v, ...rest }) => ({
+    ...rest,
+    id: _id.toString(),
+    createdAt: rest.createdAt.toISOString(),
+    updatedAt: rest.updatedAt.toISOString(),
+  })) as ITicket[];
+  return { tickets, total };
+}
+
 export async function getTicketById(id: string): Promise<ITicket | null> {
   if (!mongoose.isValidObjectId(id)) return null;
   const doc = await Ticket.findById(id).lean();

@@ -4,6 +4,12 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL
   ? `${import.meta.env.VITE_API_BASE_URL}/api/tickets`
   : '/api/tickets';
 
+export interface GetTicketsParams {
+  search?: string;
+  status?: string;
+  priority?: string;
+}
+
 export async function createTicket(data: CreateTicketBody): Promise<Ticket> {
   const res = await fetch(API_BASE, {
     method: 'POST',
@@ -17,10 +23,15 @@ export async function createTicket(data: CreateTicketBody): Promise<Ticket> {
   return res.json() as Promise<Ticket>;
 }
 
-export async function getTickets(): Promise<Ticket[]> {
-  const res = await fetch(API_BASE);
+export async function getTickets(params?: GetTicketsParams): Promise<Ticket[]> {
+  const url = new URL(API_BASE);
+  if (params?.search?.trim()) url.searchParams.set('search', params.search.trim());
+  if (params?.status) url.searchParams.set('status', params.status);
+  if (params?.priority) url.searchParams.set('priority', params.priority);
+  const res = await fetch(url.toString());
   if (!res.ok) throw new Error('Failed to fetch tickets');
-  return res.json() as Promise<Ticket[]>;
+  const data = await res.json();
+  return Array.isArray(data) ? data : (data as { tickets: Ticket[] }).tickets;
 }
 
 export async function updateTicketStatus(id: string, status: UpdateTicketBody['status']): Promise<Ticket> {

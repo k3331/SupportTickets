@@ -14,11 +14,13 @@ type BoardByStatus = Record<Status, Ticket[]>;
 export interface BoardViewProps {
   tickets: Ticket[] | undefined;
   loading: boolean;
+  error?: string | null;
   onUpdate?: () => void;
   onToast?: (message: string, type: 'info' | 'success' | 'error' | 'warning') => void;
+  onRetry?: () => void;
 }
 
-export function BoardView({ tickets, loading, onUpdate, onToast }: BoardViewProps) {
+export function BoardView({ tickets, loading, error, onUpdate, onToast, onRetry }: BoardViewProps) {
   const [dragOverColumnId, setDragOverColumnId] = useState<Status | null>(null);
 
   const byStatus = React.useMemo((): BoardByStatus => {
@@ -60,7 +62,25 @@ export function BoardView({ tickets, loading, onUpdate, onToast }: BoardViewProp
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4 gap-4 text-text-muted text-[0.9375rem]">
         <div className="h-10 w-10 rounded-full border-[3px] border-border border-t-accent animate-spin" aria-hidden />
-        <p>Loading board…</p>
+        <p>Loading tickets…</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-4 gap-4 text-center">
+        <p className="m-0 text-danger font-medium">Error fetching tickets</p>
+        <p className="m-0 text-sm text-text-muted">{error}</p>
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-hover transition-colors"
+          >
+            Retry
+          </button>
+        )}
       </div>
     );
   }

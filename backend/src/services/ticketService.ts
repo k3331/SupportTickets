@@ -2,7 +2,7 @@
  * Ticket business logic and validation.
  */
 
-import type { CreateTicketBody, UpdateTicketBody } from '../../shared/types.js';
+import type { CreateTicketBody, Ticket as ITicket, UpdateTicketBody } from '../../shared/types.js';
 import * as ticketRepository from '../models/Ticket.js';
 import { VALID_PRIORITIES, VALID_STATUSES } from '../config/constants.js';
 import { AppError } from '../errors/AppError.js';
@@ -25,7 +25,19 @@ export async function createTicket(data: CreateTicketBody | undefined) {
   });
 }
 
-export async function listTickets() {
+export async function listTickets(query?: { search?: string; status?: string; priority?: string; page?: number; limit?: number }): Promise<ITicket[] | { tickets: ITicket[]; total: number }> {
+  const hasQuery = query && (query.search !== undefined || query.status !== undefined || query.priority !== undefined || query.page !== undefined || query.limit !== undefined);
+  if (hasQuery && query) {
+    const page = Math.max(1, query.page ?? 1);
+    const limit = Math.min(100, Math.max(1, query.limit ?? 50));
+    return ticketRepository.listTicketsFiltered({
+      search: query.search,
+      status: query.status,
+      priority: query.priority,
+      page,
+      limit,
+    });
+  }
   return ticketRepository.getAllTickets();
 }
 

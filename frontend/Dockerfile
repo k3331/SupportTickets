@@ -1,13 +1,14 @@
 FROM node:20-alpine
 
-WORKDIR /app
+# Build context is repo root so we can copy backend/shared for the "shared" alias
+WORKDIR /app/frontend
 
-COPY package.json package-lock.json* ./
+COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm ci
 
-COPY . .
+COPY backend/shared ../backend/shared
+COPY frontend/ ./
 
-# Build-time API URL for fetch() in browser (when not using proxy)
 ARG VITE_API_BASE_URL=http://localhost:3001
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 

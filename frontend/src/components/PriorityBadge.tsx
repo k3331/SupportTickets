@@ -1,10 +1,11 @@
 import React from 'react';
 import type { Priority } from 'shared/types';
 
-const PRIORITY_STYLES: Record<Priority, { bg: string; label: string }> = {
-  Low: { bg: 'var(--priority-low)', label: 'Low' },
-  Medium: { bg: 'var(--priority-medium)', label: 'Medium' },
-  High: { bg: 'var(--priority-high)', label: 'High' },
+/** Priority badges: High = red, Medium = yellow, Low = green (professional look) */
+const PRIORITY_CLASSES: Record<Priority, string> = {
+  High: 'bg-red-100 text-red-700 [data-theme=dark]:bg-red-900/40 [data-theme=dark]:text-red-300',
+  Medium: 'bg-yellow-100 text-yellow-700 [data-theme=dark]:bg-amber-900/40 [data-theme=dark]:text-amber-300',
+  Low: 'bg-green-100 text-green-700 [data-theme=dark]:bg-green-900/40 [data-theme=dark]:text-green-300',
 };
 
 export interface PriorityBadgeProps {
@@ -12,14 +13,13 @@ export interface PriorityBadgeProps {
 }
 
 export function PriorityBadge({ priority }: PriorityBadgeProps) {
-  const style = PRIORITY_STYLES[priority] ?? { bg: 'var(--text-muted)', label: priority };
+  const className = PRIORITY_CLASSES[priority] ?? 'bg-gray-100 text-gray-700 [data-theme=dark]:bg-gray-800 [data-theme=dark]:text-gray-300';
   return (
     <span
-      className="inline-block px-2 py-0.5 rounded-md text-[0.6875rem] font-semibold uppercase tracking-wide"
-      style={{ backgroundColor: 'color-mix(in srgb, var(--badge-bg) 22%, transparent)', color: style.bg, ['--badge-bg' as string]: style.bg }}
-      title={style.label}
+      className={`inline-block px-2 py-0.5 rounded-md text-[0.6875rem] font-semibold uppercase tracking-wide ${className}`}
+      title={priority}
     >
-      {style.label}
+      {priority}
     </span>
   );
 }
