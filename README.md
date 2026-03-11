@@ -24,6 +24,53 @@ A full-stack application for creating, viewing, and managing support tickets wit
 - **Styling:** Tailwind CSS
 - **API tests:** Jest + supertest
 
+## Architecture
+
+### Overview
+
+The app is a **three-tier SPA**: browser → REST API → MongoDB. The frontend is a single-page React app that talks to the Express backend; the backend owns all persistence and business rules.
+
+- **Client:** React 18, Vite, TypeScript. Local component state (no Redux). Fetch API for HTTP; optional proxy in dev so the same origin is used.
+- **API:** Express on Node 20. Stateless; no server-side sessions. CORS enabled for cross-origin requests (e.g. Docker frontend on 4173 → backend on 3001).
+- **Data:** MongoDB 7. One main collection (tickets). Mongoose for schema, indexes, and timestamps.
+
+### Backend design
+
+- **Layered flow:** `routes` → `controllers` → `services` → `models`. Routes define HTTP surface; controllers parse request/response; services hold business logic and validation; models handle Mongoose and DB access.
+- **Validation:** Request bodies and params are validated with **Joi** in middleware (`validateJoi`) before controllers run. Invalid payloads return 400 with a single `{ error }` message.
+- **Errors:** Controllers and services use `next(err)` or throw `AppError` (with status code). A single **errorHandler** middleware normalizes all errors to JSON `{ error: string }` and the right status (400, 404, 500).
+- **Health:** `/health` is a simple liveness check. `/ready` reflects MongoDB connectivity (503 if disconnected) for orchestration/load balancers.
+- **Shared types:** `backend/shared` holds TypeScript types and constants (e.g. `PRIORITIES`, `STATUSES`, `Ticket`) used by both backend and frontend so API contracts stay in one place.
+
+### Frontend design
+
+- **SPA:** Single entry (`main.tsx` → `App.tsx`). No router; one main view (board).
+- **State:** React `useState` / `useCallback` in `App.tsx` for tickets, filters, search, modals, and toasts. No global store.
+- **Data flow:** `App` fetches tickets (with optional `status`/`priority` query params), passes data and callbacks into `BoardView` and modals. Updates (create, patch) trigger a refetch.
+- **Filtering:** Status and priority are sent as query params to the API (server-side). Search is client-side over the current result set for instant feedback.
+- **Styling:** Tailwind with a small set of semantic CSS variables (e.g. `--color-bg`, `--color-accent`) for theming (dark/light).
+
+### Data model
+
+- **Ticket:** `id`, `subject`, `message`, `priority` (Low | Medium | High), `status` (NEW | INVESTIGATING | RESOLVED), `createdAt`, `updatedAt`. IDs are MongoDB ObjectIds exposed as strings.
+- **Indexes:** `createdAt` descending for list ordering. No compound indexes yet; sufficient for small/medium datasets.
+
+### Docker
+
+- **Services:** `mongo`, `backend`, `frontend`. Backend and frontend are built from their own Dockerfiles; frontend build uses **repo root** as context so it can copy `backend/shared` and resolve the `shared` alias during Vite build.
+- **Backend:** Multi-stage-style: install deps, copy source, build TypeScript, then production run with `node dist/src/index.js`. MongoDB connection retries with backoff until the DB is ready.
+- **Frontend:** Builds with Vite; serves static assets via `vite preview`. `VITE_API_BASE_URL` is set at build time so the built app knows the API origin (e.g. `http://localhost:3001`).
+
+### Design choices
+
+| Choice | Rationale |
+|--------|------------|
+| Joi for validation | Schema-based, reusable, and keeps validation out of controllers. |
+| Single error middleware | Consistent API error shape and status codes from one place. |
+| Shared `backend/shared` | One source of truth for types and enums; frontend aliases it via Vite/tsconfig. |
+| Server-side status/priority filters | Reduces payload and keeps filtering consistent; search stays client-side for responsiveness. |
+| No auth in this repo | Focus on ticket CRUD and board UX; auth can be added later (e.g. JWT middleware). |
+
 ## Setup
 
 ### Backend
@@ -127,4 +174,4 @@ npm test
 
 ---
 
-**Summary:** Layered backend (routes → controllers → services → models), Joi validation, centralized error handling, health/ready endpoints, and a polished frontend with status/priority badges, loading/error states, and ticket status update in the UI.
+**Summary:** Full-stack support ticket board with a layered backend (routes → controllers → services → models), Joi validation, centralized error handling, and health/ready endpoints. Frontend: React SPA with server-side status/priority filtering, client-side search, and a Kanban board with status/priority badges, loading/error states, and create/edit/update flows. Types and enums are shared via `backend/shared`; Docker builds the frontend from repo root so that alias resolves correctly.
